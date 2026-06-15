@@ -1,0 +1,15 @@
+config {
+  type: "operations",
+  tags: ["setup", "ingestion"],
+  description: "Plain external table over the multilingual customer-feedback NDJSON, mapping each whole JSON line to a single native JSON column. Read with format=CSV + a tab delimiter and quoting disabled so commas/quotes inside the JSON are not split. DELIBERATELY NOT materialised: the bronze layer is a view directly over this external, row-oriented JSON -- a teaching anti-pattern (not performant vs a materialised native or columnar/Parquet table). Contrast with op_create_biglake_baggage (external over columnar Parquet)."
+}
+
+CREATE OR REPLACE EXTERNAL TABLE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.raw_customer_feedback` (
+  payload JSON
+)
+OPTIONS (
+  format = 'CSV',
+  field_delimiter = '\t',
+  quote = '',
+  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/customer_feedback/*/customer_feedback.jsonl']
+)

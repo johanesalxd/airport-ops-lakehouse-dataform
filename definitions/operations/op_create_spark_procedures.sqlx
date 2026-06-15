@@ -1,7 +1,7 @@
 config {
   type: "operations",
   tags: ["setup", "spark"],
-  description: "Creates serverless BigQuery Spark stored procedures that ingest the messy/compressed/nested sources into the control (raw) dataset."
+  description: "Creates serverless BigQuery Spark stored procedures that ingest the messy/compressed/nested sources (gzip CSV, nested JSON) into the control (raw) dataset."
 }
 
 -- Gzip CSV -> raw_passenger_flow
@@ -60,24 +60,4 @@ out = rdg.select(
     .option("writeMethod", "direct")
     .mode("overwrite")
     .save())
-""";
-
--- Multilingual JSON array -> raw_customer_feedback
-CREATE OR REPLACE PROCEDURE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_load_customer_feedback`(src_uri STRING)
-WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.sparkConnection}`
-OPTIONS(engine="SPARK", runtime_version="2.2")
-LANGUAGE PYTHON AS R"""
-import os, json
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder.appName("load_customer_feedback").getOrCreate()
-src = json.loads(os.environ["BIGQUERY_PROC_PARAM.src_uri"])
-
-df = spark.read.option("multiline", True).json(src)
-
-(df.write.format("bigquery")
-   .option("table", "${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.raw_customer_feedback")
-   .option("writeMethod", "direct")
-   .mode("overwrite")
-   .save())
 """
