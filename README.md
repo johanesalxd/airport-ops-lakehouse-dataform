@@ -13,7 +13,7 @@ Dataform repository expects the project at the Git repo root.
 
 ```
 raw GCS files
-  -> operations:  native loads + BigLake external table + serverless Spark stored procedures
+  -> operations:  native loads + external tables (BigLake/Parquet + plain external NDJSON->native JSON column) + serverless Spark stored procedures
   -> bronze:      typed, with ingestion metadata (_batch_id, _ingested_at, _record_hash)
   -> silver:      conformed, cleaned, deduplicated; Gemini multilingual feedback enrichment
   -> gold:        ATOMIC star schema (dim_terminal, dim_airline, dim_date, fct_flight, fct_baggage, fct_feedback)
@@ -41,7 +41,7 @@ its own stage, so the flow is visible in the Airflow graph.
 ```
 workflow_settings.yaml          # project, location, datasets, connections, batchId var
 definitions/
-  operations/   native loads, BigLake external table, Spark proc DDL + CALLs, Gemini model
+  operations/   native loads, external tables (BigLake Parquet + plain external JSON column), Spark proc DDL + CALLs, Gemini model
   sources/      declarations.js (raw source declarations)
   bronze/       brz_*  typed + ingestion metadata
   silver/       slv_*  conformed/cleaned + slv_customer_feedback_enriched (Gemini)
