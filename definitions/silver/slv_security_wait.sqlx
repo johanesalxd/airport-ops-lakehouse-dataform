@@ -1,0 +1,22 @@
+js {
+  const metrics = require("includes/metrics");
+}
+
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver"],
+  description: "Conformed security checkpoint wait readings with SLA breach flag."
+}
+
+SELECT
+  checkpoint_id,
+  terminal_id,
+  reading_ts,
+  DATE(reading_ts) AS reading_date,
+  EXTRACT(HOUR FROM reading_ts) AS reading_hour,
+  wait_minutes,
+  queue_length,
+  lanes_open,
+  ${metrics.isWaitBreach("wait_minutes")} AS is_wait_breach
+FROM ${ref("brz_security_wait")}

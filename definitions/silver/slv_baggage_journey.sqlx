@@ -1,0 +1,38 @@
+js {
+  const { SLA } = require("includes/constants");
+}
+
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver"],
+  description: "Baggage journey per bag: span, scan count, missing-scan and late flags. One row per bag_id."
+}
+
+WITH journey AS (
+  SELECT
+    bag_id,
+    ANY_VALUE(flight_id) AS flight_id,
+    ANY_VALUE(terminal_id) AS terminal_id,
+    MIN(scan_ts) AS first_scan_ts,
+    MAX(scan_ts) AS last_scan_ts,
+    COUNT(*) AS scan_count,
+    COUNTIF(scan_type = 'load') AS load_scans,
+    COUNTIF(scan_type = 'claim') AS claim_scans
+  FROM ${ref("brz_baggage_events")}
+  GROUP BY bag_id
+)
+SELECT
+  bag_id,
+  flight_id,
+  terminal_id,
+  first_scan_ts,
+  last_scan_ts,
+  scan_count,
+  TIMESTAMP_DIFF(last_scan_ts, first_scan_ts, MINUTE) AS journey_minutes,
+  CASE WHEN load_scans = 0 THEN TRUE ELSE FALSE END AS has_missing_load_scan,
+  CASE
+    WHEN TIMESTAMP_DIFF(last_scan_ts, first_scan_ts, MINUTE) >= ${SLA.BAGGAGE_JOURNEY_MINUTES}
+    THEN TRUE ELSE FALSE
+  END AS is_late
+FROM journey

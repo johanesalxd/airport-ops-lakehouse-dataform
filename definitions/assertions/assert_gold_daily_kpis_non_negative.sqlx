@@ -1,0 +1,12 @@
+config {
+  type: "assertion",
+  tags: ["quality"],
+  description: "Daily KPI sanity: rates within [0,1], counts non-negative. Returns offending rows (zero = pass)."
+}
+
+SELECT date_key
+FROM ${ref("sem_airport_operations_daily")}
+WHERE delay_rate < 0
+   OR delay_rate > 1
+   OR total_flights < 0
+   OR avg_delay_minutes < 0

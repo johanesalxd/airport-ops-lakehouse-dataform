@@ -1,0 +1,23 @@
+js {
+  const metrics = require("includes/metrics");
+}
+
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver"],
+  description: "Per-flight delay enrichment: delay bucket and SLA breach flag (logic centralised in includes/metrics.js)."
+}
+
+SELECT
+  flight_id,
+  airline_code,
+  terminal_id,
+  flight_date,
+  departure_hour,
+  delay_minutes,
+  delay_reason,
+  ${metrics.delayBucket("delay_minutes")} AS delay_bucket,
+  ${metrics.isDelayed("delay_minutes")} AS is_delayed
+FROM ${ref("slv_flights")}
+WHERE status != 'cancelled'

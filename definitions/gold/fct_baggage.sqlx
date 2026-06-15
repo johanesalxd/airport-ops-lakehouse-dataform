@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.goldDataset,
+  tags: ["gold"],
+  description: "Atomic baggage fact: one row per bag, filtered to bags whose flight is known (orphans quarantined).",
+  assertions: {
+    uniqueKey: ["bag_id"]
+  }
+}
+
+SELECT
+  b.bag_id,
+  b.flight_id,
+  f.date_key,
+  b.terminal_id,
+  b.scan_count,
+  b.journey_minutes,
+  b.has_missing_load_scan,
+  b.is_late
+FROM ${ref("slv_baggage_journey")} AS b
+INNER JOIN ${ref("fct_flight")} AS f
+  USING (flight_id)

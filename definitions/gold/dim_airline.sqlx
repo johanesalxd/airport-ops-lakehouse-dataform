@@ -1,0 +1,12 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.goldDataset,
+  tags: ["gold"],
+  description: "Conformed airline dimension (derived from observed flights)."
+}
+
+SELECT DISTINCT
+  airline_code,
+  CONCAT('Airline ', airline_code) AS airline_name
+FROM ${ref("slv_flights")}
+WHERE airline_code IS NOT NULL

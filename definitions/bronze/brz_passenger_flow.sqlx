@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_call_sp_passenger_flow"],
+  description: "Bronze passenger flow sensor observations (ingested via serverless Spark from gzip CSV).",
+  assertions: { nonNull: ["observation_id"] }
+}
+
+SELECT
+  CAST(observation_id AS STRING) AS observation_id,
+  CAST(terminal_id AS STRING) AS terminal_id,
+  CAST(zone_id AS STRING) AS zone_id,
+  SAFE_CAST(observed_ts AS TIMESTAMP) AS observed_ts,
+  SAFE_CAST(passenger_count AS INT64) AS passenger_count,
+  CAST(sensor_id AS STRING) AS sensor_id,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'passenger_flow.csv.gz' AS _source_file,
+  'CSV_GZIP_SPARK' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_passenger_flow")} AS t

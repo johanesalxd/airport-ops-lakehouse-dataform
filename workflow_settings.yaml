@@ -1,0 +1,17 @@
+defaultProject: johanesa-playground-326616
+defaultLocation: us-central1
+defaultDataset: airport_silver
+defaultAssertionDataset: dataform_assertions
+vars:
+  rawBucket: airport-ops-demo-605626490127
+  sparkConnection: us-central1.spark-etl-conn
+  geminiConnection: us-central1.gemini_conn
+  biglakeConnection: us-central1.default-us-central1
+  geminiEndpoint: gemini-2.5-flash
+  bronzeDataset: airport_bronze
+  silverDataset: airport_silver
+  goldDataset: airport_gold
+  semanticDataset: airport_semantic
+  aiDataset: airport_ai
+  controlDataset: airport_ops_control
+  batchId: manual

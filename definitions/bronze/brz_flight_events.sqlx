@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_load_flight_events"],
+  description: "Bronze flight operational events: status, delay minutes, delay reason.",
+  assertions: { nonNull: ["event_id", "flight_id"] }
+}
+
+SELECT
+  CAST(event_id AS STRING) AS event_id,
+  CAST(flight_id AS STRING) AS flight_id,
+  CAST(event_type AS STRING) AS event_type,
+  SAFE_CAST(actual_ts AS TIMESTAMP) AS actual_ts,
+  CAST(status AS STRING) AS status,
+  SAFE_CAST(delay_minutes AS INT64) AS delay_minutes,
+  CAST(delay_reason AS STRING) AS delay_reason,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'flight_events.jsonl' AS _source_file,
+  'JSON' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_flight_events")} AS t

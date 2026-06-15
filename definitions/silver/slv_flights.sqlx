@@ -1,0 +1,31 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver"],
+  description: "Conformed flights at atomic grain: one row per flight occurrence with schedule + operational status.",
+  assertions: {
+    uniqueKey: ["flight_id"],
+    nonNull: ["flight_id", "terminal_id", "airline_code"]
+  }
+}
+
+SELECT
+  s.flight_id,
+  s.airline_code,
+  s.flight_number,
+  s.destination,
+  s.terminal_id,
+  s.gate,
+  s.aircraft_type,
+  s.scheduled_departure,
+  s.scheduled_arrival,
+  s.scheduled_passengers,
+  DATE(s.scheduled_departure) AS flight_date,
+  EXTRACT(HOUR FROM s.scheduled_departure) AS departure_hour,
+  e.actual_ts AS actual_departure,
+  COALESCE(e.status, 'unknown') AS status,
+  COALESCE(e.delay_minutes, 0) AS delay_minutes,
+  e.delay_reason
+FROM ${ref("brz_flight_schedules")} AS s
+LEFT JOIN ${ref("brz_flight_events")} AS e
+  USING (flight_id)

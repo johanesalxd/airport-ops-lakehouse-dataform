@@ -1,0 +1,17 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver"],
+  description: "Cleaned passenger flow observations. Invalid (negative) counts are quarantined out here so downstream stays clean."
+}
+
+SELECT
+  observation_id,
+  terminal_id,
+  zone_id,
+  observed_ts,
+  DATE(observed_ts) AS observation_date,
+  EXTRACT(HOUR FROM observed_ts) AS observation_hour,
+  passenger_count
+FROM ${ref("brz_passenger_flow")}
+WHERE passenger_count >= 0

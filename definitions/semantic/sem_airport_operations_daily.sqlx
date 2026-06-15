@@ -1,0 +1,43 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.semanticDataset,
+  tags: ["semantic"],
+  description: "SEMANTIC LAYER (query-time roll-up). Daily operational KPIs computed from the atomic fct_flight + fct_baggage. No data is materialised here - this view is the 'metric definition' a tool like Looker/AtScale/Cube would own."
+}
+
+WITH flights AS (
+  SELECT
+    date_key,
+    COUNT(*) AS total_flights,
+    SUM(is_delayed) AS delayed_flights,
+    ROUND(AVG(is_delayed), 3) AS delay_rate,
+    ROUND(AVG(delay_minutes), 1) AS avg_delay_minutes,
+    SUM(scheduled_passengers) AS total_scheduled_passengers
+  FROM ${ref("fct_flight")}
+  GROUP BY date_key
+),
+
+baggage AS (
+  SELECT
+    date_key,
+    COUNT(*) AS total_bags,
+    ROUND(AVG(IF(is_late, 1, 0)), 3) AS late_bag_rate,
+    SUM(IF(has_missing_load_scan, 1, 0)) AS bags_missing_load_scan
+  FROM ${ref("fct_baggage")}
+  GROUP BY date_key
+)
+
+SELECT
+  f.date_key,
+  f.total_flights,
+  f.delayed_flights,
+  f.delay_rate,
+  f.avg_delay_minutes,
+  f.total_scheduled_passengers,
+  b.total_bags,
+  b.late_bag_rate,
+  b.bags_missing_load_scan
+FROM flights AS f
+LEFT JOIN baggage AS b
+  USING (date_key)
+ORDER BY f.date_key

@@ -1,0 +1,58 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.semanticDataset,
+  tags: ["semantic"],
+  description: "SEMANTIC LAYER. Terminal x hour congestion view rolling up passenger flow + security wait + flight volume at query time."
+}
+
+WITH flow AS (
+  SELECT
+    terminal_id,
+    observation_date AS date_key,
+    observation_hour AS hour_of_day,
+    SUM(passenger_count) AS total_passengers,
+    ROUND(AVG(passenger_count), 0) AS avg_zone_passengers
+  FROM ${ref("slv_passenger_flow")}
+  GROUP BY terminal_id, date_key, hour_of_day
+),
+
+wait AS (
+  SELECT
+    terminal_id,
+    reading_date AS date_key,
+    reading_hour AS hour_of_day,
+    ROUND(AVG(wait_minutes), 1) AS avg_wait_minutes,
+    MAX(wait_minutes) AS max_wait_minutes,
+    MAX(is_wait_breach) AS any_wait_breach
+  FROM ${ref("slv_security_wait")}
+  GROUP BY terminal_id, date_key, hour_of_day
+),
+
+flights AS (
+  SELECT
+    terminal_id,
+    date_key,
+    departure_hour AS hour_of_day,
+    COUNT(*) AS departures,
+    SUM(is_delayed) AS delayed_departures
+  FROM ${ref("fct_flight")}
+  GROUP BY terminal_id, date_key, hour_of_day
+)
+
+SELECT
+  COALESCE(flow.terminal_id, wait.terminal_id, flights.terminal_id) AS terminal_id,
+  COALESCE(flow.date_key, wait.date_key, flights.date_key) AS date_key,
+  COALESCE(flow.hour_of_day, wait.hour_of_day, flights.hour_of_day) AS hour_of_day,
+  flow.total_passengers,
+  flow.avg_zone_passengers,
+  wait.avg_wait_minutes,
+  wait.max_wait_minutes,
+  wait.any_wait_breach,
+  flights.departures,
+  flights.delayed_departures
+FROM flow
+FULL OUTER JOIN wait
+  USING (terminal_id, date_key, hour_of_day)
+FULL OUTER JOIN flights
+  USING (terminal_id, date_key, hour_of_day)
+ORDER BY terminal_id, date_key, hour_of_day

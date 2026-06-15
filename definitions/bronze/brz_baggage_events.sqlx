@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_create_biglake_baggage"],
+  description: "Bronze baggage scan events (sourced from the BigLake Parquet external table).",
+  assertions: { nonNull: ["bag_id"] }
+}
+
+SELECT
+  CAST(bag_id AS STRING) AS bag_id,
+  CAST(flight_id AS STRING) AS flight_id,
+  CAST(scan_type AS STRING) AS scan_type,
+  SAFE_CAST(scan_ts AS TIMESTAMP) AS scan_ts,
+  CAST(terminal_id AS STRING) AS terminal_id,
+  CAST(belt_id AS STRING) AS belt_id,
+  CAST(status AS STRING) AS status,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'baggage_events.parquet' AS _source_file,
+  'PARQUET' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_baggage_events")} AS t

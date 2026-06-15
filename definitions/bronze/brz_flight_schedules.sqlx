@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_load_flight_schedules"],
+  description: "Bronze flight schedules: typed, with ingestion metadata. One row per scheduled flight occurrence.",
+  assertions: { nonNull: ["flight_id"] }
+}
+
+SELECT
+  CAST(flight_id AS STRING) AS flight_id,
+  CAST(airline_code AS STRING) AS airline_code,
+  CAST(flight_number AS STRING) AS flight_number,
+  CAST(origin AS STRING) AS origin,
+  CAST(destination AS STRING) AS destination,
+  SAFE_CAST(scheduled_departure AS TIMESTAMP) AS scheduled_departure,
+  SAFE_CAST(scheduled_arrival AS TIMESTAMP) AS scheduled_arrival,
+  CAST(terminal_id AS STRING) AS terminal_id,
+  CAST(gate AS STRING) AS gate,
+  CAST(aircraft_type AS STRING) AS aircraft_type,
+  SAFE_CAST(scheduled_passengers AS INT64) AS scheduled_passengers,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'flight_schedules.csv' AS _source_file,
+  'CSV' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_flight_schedules")} AS t

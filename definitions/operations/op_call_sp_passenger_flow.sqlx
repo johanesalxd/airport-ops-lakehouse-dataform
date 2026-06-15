@@ -1,0 +1,10 @@
+config {
+  type: "operations",
+  tags: ["ingestion"],
+  dependencies: ["op_create_spark_procedures"],
+  description: "Runs the serverless Spark procedure that ingests gzip passenger-flow CSV into the raw control dataset."
+}
+
+CALL `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_load_passenger_flow`(
+  'gs://${dataform.projectConfig.vars.rawBucket}/raw/passenger_flow/*/passenger_flow.csv.gz'
+)

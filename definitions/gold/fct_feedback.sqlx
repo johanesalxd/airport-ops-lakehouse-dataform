@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.goldDataset,
+  tags: ["gold"],
+  description: "Atomic passenger feedback fact: one row per feedback with Gemini-derived attributes.",
+  assertions: {
+    uniqueKey: ["feedback_id"]
+  },
+  bigquery: {
+    partitionBy: "feedback_date",
+    clusterBy: ["terminal_id", "sentiment"]
+  }
+}
+
+SELECT
+  feedback_id,
+  feedback_date,
+  terminal_id,
+  source_language,
+  detected_language,
+  sentiment,
+  topic,
+  urgency,
+  rating,
+  english_translation,
+  summary
+FROM ${ref("slv_customer_feedback_enriched")}

@@ -1,0 +1,75 @@
+js {
+  const prompts = require("includes/prompts");
+}
+
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver", "ai"],
+  dependencies: ["op_create_gemini_model"],
+  description: "Multilingual feedback translated + classified with Gemini, then parsed to typed columns with safe fallbacks."
+}
+
+WITH prompts AS (
+  SELECT
+    feedback_id,
+    terminal_id,
+    submitted_ts,
+    source_language,
+    feedback_text,
+    rating,
+    ${prompts.feedbackEnrichmentPrompt("feedback_text")} AS prompt
+  FROM ${ref("brz_customer_feedback")}
+),
+
+generated AS (
+  SELECT
+    feedback_id,
+    terminal_id,
+    submitted_ts,
+    source_language,
+    feedback_text,
+    rating,
+    result AS gemini_raw
+  FROM AI.GENERATE_TEXT(
+    MODEL `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.aiDataset}.gemini_model`,
+    TABLE prompts,
+    STRUCT(0.2 AS temperature, 512 AS max_output_tokens)
+  )
+),
+
+parsed AS (
+  SELECT
+    *,
+    SAFE.PARSE_JSON(
+      REGEXP_REPLACE(gemini_raw, r'(?i)```json|```', '')
+    ) AS j
+  FROM generated
+)
+
+SELECT
+  feedback_id,
+  terminal_id,
+  submitted_ts,
+  DATE(submitted_ts) AS feedback_date,
+  source_language,
+  feedback_text,
+  rating,
+  gemini_raw,
+  COALESCE(JSON_VALUE(j, '$.detected_language'), source_language) AS detected_language,
+  JSON_VALUE(j, '$.english_translation') AS english_translation,
+  CASE LOWER(JSON_VALUE(j, '$.sentiment'))
+    WHEN 'positive' THEN 'positive'
+    WHEN 'negative' THEN 'negative'
+    WHEN 'neutral' THEN 'neutral'
+    ELSE 'neutral'
+  END AS sentiment,
+  COALESCE(LOWER(JSON_VALUE(j, '$.topic')), 'unknown') AS topic,
+  CASE LOWER(JSON_VALUE(j, '$.urgency'))
+    WHEN 'high' THEN 'high'
+    WHEN 'medium' THEN 'medium'
+    WHEN 'low' THEN 'low'
+    ELSE 'low'
+  END AS urgency,
+  JSON_VALUE(j, '$.summary') AS summary
+FROM parsed

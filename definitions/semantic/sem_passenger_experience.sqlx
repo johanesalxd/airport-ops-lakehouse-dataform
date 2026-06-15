@@ -1,0 +1,20 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.semanticDataset,
+  tags: ["semantic"],
+  description: "SEMANTIC LAYER. Passenger experience roll-up by date + terminal over the atomic feedback fact."
+}
+
+SELECT
+  feedback_date AS date_key,
+  terminal_id,
+  COUNT(*) AS total_feedback,
+  COUNTIF(sentiment = 'negative') AS negative_count,
+  COUNTIF(sentiment = 'positive') AS positive_count,
+  COUNTIF(sentiment = 'neutral') AS neutral_count,
+  ROUND(SAFE_DIVIDE(COUNTIF(sentiment = 'negative'), COUNT(*)), 3) AS negative_rate,
+  COUNTIF(urgency = 'high') AS urgent_count,
+  ROUND(AVG(rating), 2) AS avg_rating
+FROM ${ref("fct_feedback")}
+GROUP BY date_key, terminal_id
+ORDER BY date_key, terminal_id

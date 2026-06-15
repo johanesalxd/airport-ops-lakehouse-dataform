@@ -1,0 +1,9 @@
+config {
+  type: "operations",
+  tags: ["setup", "ai"],
+  description: "Creates the BigQuery ML remote model over Gemini used for multilingual feedback enrichment."
+}
+
+CREATE OR REPLACE MODEL `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.aiDataset}.gemini_model`
+REMOTE WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.geminiConnection}`
+OPTIONS (ENDPOINT = '${dataform.projectConfig.vars.geminiEndpoint}')

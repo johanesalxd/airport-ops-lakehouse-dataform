@@ -1,0 +1,32 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.goldDataset,
+  tags: ["gold"],
+  description: "Atomic flight fact: one row per flight, foreign keys to date/terminal/airline, measures at finest grain.",
+  assertions: {
+    uniqueKey: ["flight_id"],
+    nonNull: ["flight_id", "flight_date", "terminal_id"]
+  },
+  bigquery: {
+    partitionBy: "flight_date",
+    clusterBy: ["terminal_id", "airline_code"]
+  }
+}
+
+SELECT
+  f.flight_id,
+  f.flight_date AS date_key,
+  f.terminal_id,
+  f.airline_code,
+  f.destination,
+  f.gate,
+  f.aircraft_type,
+  f.departure_hour,
+  f.status,
+  f.scheduled_passengers,
+  f.delay_minutes,
+  COALESCE(d.delay_bucket, 'unknown') AS delay_bucket,
+  COALESCE(d.is_delayed, 0) AS is_delayed
+FROM ${ref("slv_flights")} AS f
+LEFT JOIN ${ref("slv_flight_delays")} AS d
+  USING (flight_id)

@@ -1,0 +1,10 @@
+config {
+  type: "operations",
+  tags: ["ingestion"],
+  dependencies: ["op_create_spark_procedures"],
+  description: "Runs the serverless Spark procedure that flattens nested security wait-time JSON into the raw control dataset."
+}
+
+CALL `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_load_security_wait`(
+  'gs://${dataform.projectConfig.vars.rawBucket}/raw/security_wait_times/*/security_wait_times.json'
+)

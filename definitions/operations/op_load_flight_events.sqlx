@@ -1,0 +1,11 @@
+config {
+  type: "operations",
+  tags: ["ingestion"],
+  description: "Native BigQuery load of the newline-delimited flight events JSON into the raw control dataset."
+}
+
+LOAD DATA OVERWRITE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.raw_flight_events`
+FROM FILES (
+  format = 'JSON',
+  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/flight_events/*/flight_events.jsonl']
+)

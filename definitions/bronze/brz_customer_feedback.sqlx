@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_call_sp_customer_feedback"],
+  description: "Bronze multilingual customer feedback (ingested via serverless Spark from JSON).",
+  assertions: { nonNull: ["feedback_id"] }
+}
+
+SELECT
+  CAST(feedback_id AS STRING) AS feedback_id,
+  CAST(terminal_id AS STRING) AS terminal_id,
+  SAFE_CAST(submitted_ts AS TIMESTAMP) AS submitted_ts,
+  CAST(source_language AS STRING) AS source_language,
+  CAST(feedback_text AS STRING) AS feedback_text,
+  SAFE_CAST(rating AS INT64) AS rating,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'customer_feedback.json' AS _source_file,
+  'JSON_SPARK' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_customer_feedback")} AS t

@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  tags: ["bronze"],
+  dependencies: ["op_call_sp_security_wait"],
+  description: "Bronze security checkpoint wait-time readings (flattened from nested JSON via serverless Spark)."
+}
+
+SELECT
+  CAST(checkpoint_id AS STRING) AS checkpoint_id,
+  CAST(terminal_id AS STRING) AS terminal_id,
+  SAFE_CAST(reading_ts AS TIMESTAMP) AS reading_ts,
+  SAFE_CAST(wait_minutes AS INT64) AS wait_minutes,
+  SAFE_CAST(queue_length AS INT64) AS queue_length,
+  SAFE_CAST(lanes_open AS INT64) AS lanes_open,
+  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+  'security_wait_times.json' AS _source_file,
+  'JSON_NESTED_SPARK' AS _source_format,
+  CURRENT_TIMESTAMP() AS _ingested_at,
+  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+FROM ${ref("raw_security_wait")} AS t

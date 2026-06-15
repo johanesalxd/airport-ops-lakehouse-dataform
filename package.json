@@ -1,0 +1,8 @@
+{
+  "name": "airport-ops-lakehouse-dataform",
+  "version": "1.0.0",
+  "description": "Dataform project for the Airport Operations Lakehouse demo (bronze/silver/gold + semantic views).",
+  "dependencies": {
+    "@dataform/core": "3.0.59"
+  }
+}

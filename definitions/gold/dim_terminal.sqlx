@@ -1,0 +1,16 @@
+js {
+  const { TERMINALS } = require("includes/constants");
+  const values = TERMINALS.map((t) => `'${t}'`).join(", ");
+}
+
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.goldDataset,
+  tags: ["gold"],
+  description: "Conformed terminal dimension."
+}
+
+SELECT
+  terminal_id,
+  CONCAT('Terminal ', SUBSTR(terminal_id, 2)) AS terminal_name
+FROM UNNEST([${values}]) AS terminal_id

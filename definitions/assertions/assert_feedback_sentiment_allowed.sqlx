@@ -1,0 +1,9 @@
+config {
+  type: "assertion",
+  tags: ["quality"],
+  description: "Gemini-derived sentiment must be one of the allowed values. Returns offending rows (zero = pass)."
+}
+
+SELECT feedback_id
+FROM ${ref("fct_feedback")}
+WHERE sentiment NOT IN ('positive', 'neutral', 'negative')

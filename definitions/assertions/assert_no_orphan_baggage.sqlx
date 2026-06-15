@@ -1,0 +1,11 @@
+config {
+  type: "assertion",
+  tags: ["quality"],
+  description: "Every baggage fact row must reference a known flight. Returns offending rows (zero = pass)."
+}
+
+SELECT b.bag_id
+FROM ${ref("fct_baggage")} AS b
+LEFT JOIN ${ref("fct_flight")} AS f
+  USING (flight_id)
+WHERE f.flight_id IS NULL

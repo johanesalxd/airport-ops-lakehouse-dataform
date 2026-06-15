@@ -1,0 +1,12 @@
+config {
+  type: "operations",
+  tags: ["setup", "ingestion"],
+  description: "BigLake external table over the baggage Parquet files in Cloud Storage."
+}
+
+CREATE OR REPLACE EXTERNAL TABLE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.raw_baggage_events`
+WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.biglakeConnection}`
+OPTIONS (
+  format = 'PARQUET',
+  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/baggage_events/*/*.parquet']
+)

@@ -1,0 +1,12 @@
+config {
+  type: "operations",
+  tags: ["ingestion"],
+  description: "Native BigQuery load of the flight schedules CSV into the raw control dataset."
+}
+
+LOAD DATA OVERWRITE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.raw_flight_schedules`
+FROM FILES (
+  format = 'CSV',
+  skip_leading_rows = 1,
+  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/flight_schedules/*/flight_schedules.csv']
+)
