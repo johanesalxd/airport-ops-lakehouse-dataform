@@ -4,6 +4,11 @@ config {
   description: "Gemini-derived sentiment must be one of the allowed values. Returns offending rows (zero = pass)."
 }
 
+js {
+  const { SENTIMENTS } = require("includes/constants");
+  const allowed = SENTIMENTS.map((s) => `'${s}'`).join(", ");
+}
+
 SELECT feedback_id
 FROM ${ref("fct_feedback")}
-WHERE sentiment NOT IN ('positive', 'neutral', 'negative')
+WHERE sentiment NOT IN (${allowed})

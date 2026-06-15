@@ -26,14 +26,8 @@ function isWaitBreach(col) {
   return `CASE WHEN ${col} >= ${SLA.SECURITY_WAIT_MINUTES} THEN 1 ELSE 0 END`;
 }
 
-// 1 when a passenger count indicates congestion, else 0.
-function isCongested(col) {
-  return `CASE WHEN ${col} >= ${SLA.CONGESTION_PASSENGERS} THEN 1 ELSE 0 END`;
-}
-
 module.exports = {
   delayBucket,
   isDelayed,
   isWaitBreach,
-  isCongested,
 };

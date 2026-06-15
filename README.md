@@ -31,9 +31,9 @@ Dataform (here); the semantic layer only aggregates.
 
 ## Tags (stages)
 
-`setup` → `ingestion` → `silver` → `gold` → `semantic` → `quality`
+`setup` → `ingestion` → `bronze` → `silver` → `gold` → `semantic` → `quality`
 
-The Composer DAG runs one stage per tag.
+The Composer DAG runs one stage per tag, in this order.
 
 ## Local development
 

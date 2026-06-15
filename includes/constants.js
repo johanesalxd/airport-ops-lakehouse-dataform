@@ -12,20 +12,16 @@ const SLA = {
   SECURITY_WAIT_MINUTES: 30,
   // Baggage considered late if full journey exceeds this many minutes.
   BAGGAGE_JOURNEY_MINUTES: 45,
-  // Terminal zone considered "congested" at/above this passenger count.
-  CONGESTION_PASSENGERS: 900,
 };
 
-const TIMEZONE = "Asia/Singapore";
-
-// Allowed enrichment values (kept in sync with the Gemini prompt + assertions).
+// Allowed enrichment values. Defined once here and imported by the Gemini prompt
+// (includes/prompts.js) and the sentiment assertion so they can never drift.
 const SENTIMENTS = ["positive", "neutral", "negative"];
 const URGENCIES = ["low", "medium", "high"];
 
 module.exports = {
   TERMINALS,
   SLA,
-  TIMEZONE,
   SENTIMENTS,
   URGENCIES,
 };
