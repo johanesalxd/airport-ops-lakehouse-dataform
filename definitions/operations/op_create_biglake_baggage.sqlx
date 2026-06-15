@@ -8,5 +8,5 @@ CREATE OR REPLACE EXTERNAL TABLE `${dataform.projectConfig.defaultDatabase}.${da
 WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.biglakeConnection}`
 OPTIONS (
   format = 'PARQUET',
-  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/baggage_events/*/*.parquet']
+  uris = ['gs://${dataform.projectConfig.vars.rawBucket}/raw/baggage_events/*.parquet']
 )
