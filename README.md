@@ -31,7 +31,7 @@ Dataform (here); the semantic layer only aggregates.
 
 ## Tags (stages)
 
-`setup` → `ingestion` → `bronze` → `silver` → `gold` → `semantic` → `quality`
+`setup` → `ingestion` → `bronze` → `silver` → `gold` → `semantic` → `quality` → `security`
 
 The Composer DAG runs one stage per tag, in this order. Each medallion layer is
 its own stage, so the flow is visible in the Airflow graph.
@@ -48,6 +48,7 @@ definitions/
   gold/         dim_* / fct_*  atomic star schema + gold_data_quality_summary
   semantic/     sem_*  query-time roll-up views
   assertions/   manual data-quality gates
+  security/     RLS + CLS governance showcase (self-contained staff_directory)
 includes/       reusable JS (the DRY layer)
 ```
 
