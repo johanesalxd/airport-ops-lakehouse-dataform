@@ -1,0 +1,32 @@
+config {
+  type: "table",
+  schema: dataform.projectConfig.vars.governanceDataset,
+  name: "staff_directory",
+  tags: ["security"],
+  description: "Self-contained, synthetic airport staff roster used ONLY to demo BigQuery Row-Level Security (RLS) and Column-Level Security (CLS). Nothing in the medallion pipeline reads this table, so the access policies attached to it cannot affect the main flow. All values are fake.",
+  assertions: {
+    uniqueKey: ["staff_id"],
+    nonNull: ["staff_id", "name", "department"]
+  },
+  columns: {
+    staff_id: "Unique identifier for the staff member",
+    name: "Full name (public)",
+    email: "Work email (CLS: masked with DEFAULT_MASKING_VALUE for non-admins)",
+    department: "Department; used for Row-Level Security filtering (Sales group sees only 'Sales')",
+    salary: "Annual salary (CLS: masked as NULL for non-admins)",
+    ssn: "National ID number (CLS: masked as SHA256 for non-admins)",
+    bank_account: "Payroll bank account (CLS: access blocked entirely for non-admins)"
+  }
+}
+
+SELECT 'S001' AS staff_id, 'Alice Tan'      AS name, 'alice.tan@airport.example'    AS email, 'Sales'      AS department, 75000.0 AS salary, '123-45-6789' AS ssn, '9876543210' AS bank_account
+UNION ALL
+SELECT 'S002' AS staff_id, 'Bob Lim'        AS name, 'bob.lim@airport.example'      AS email, 'Sales'      AS department, 68000.0 AS salary, '234-56-7890' AS ssn, '8765432109' AS bank_account
+UNION ALL
+SELECT 'S003' AS staff_id, 'Carol Nguyen'   AS name, 'carol.nguyen@airport.example' AS email, 'Ground Ops' AS department, 82000.0 AS salary, '345-67-8901' AS ssn, '7654321098' AS bank_account
+UNION ALL
+SELECT 'S004' AS staff_id, 'David Rao'       AS name, 'david.rao@airport.example'    AS email, 'Ground Ops' AS department, 79000.0 AS salary, '456-78-9012' AS ssn, '6543210987' AS bank_account
+UNION ALL
+SELECT 'S005' AS staff_id, 'Emma Said'       AS name, 'emma.said@airport.example'    AS email, 'Security'    AS department, 95000.0 AS salary, '567-89-0123' AS ssn, '5432109876' AS bank_account
+UNION ALL
+SELECT 'S006' AS staff_id, 'Frank Oso'       AS name, 'frank.oso@airport.example'    AS email, 'Security'    AS department, 88000.0 AS salary, '678-90-1234' AS ssn, '4321098765' AS bank_account

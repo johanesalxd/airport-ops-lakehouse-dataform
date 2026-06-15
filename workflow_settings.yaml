@@ -14,4 +14,10 @@ vars:
   semanticDataset: airport_semantic
   aiDataset: airport_ai
   controlDataset: airport_ops_control
+  governanceDataset: airport_governance
   batchId: manual
+  # RLS/CLS governance showcase (self-contained staff_directory table).
+  adminGroup: "group:bq-rls-cls-dataform-admin@johanesa.altostrat.com"
+  salesGroup: "group:bq-rls-cls-dataform-sales@johanesa.altostrat.com"
+  adminPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-admin@johanesa.altostrat.com"
+  salesPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-sales@johanesa.altostrat.com"

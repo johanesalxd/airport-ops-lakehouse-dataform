@@ -1,0 +1,20 @@
+config {
+  type: "operations",
+  name: "rls_staff_directory",
+  hasOutput: false,
+  tags: ["security"],
+  description: "Row-Level Security for staff_directory: admins see all rows, the Sales group sees only Sales-department rows. Note: once any row access policy exists, principals not covered by a policy see ZERO rows -- which is why this table is deliberately isolated (no pipeline model reads it).",
+  dependencies: ["staff_directory"]
+}
+
+-- Admins see every row.
+CREATE OR REPLACE ROW ACCESS POLICY admin_full_access
+ON ${ref("staff_directory")}
+GRANT TO ('${dataform.projectConfig.vars.adminGroup}')
+FILTER USING (TRUE);
+
+-- Sales group sees only the Sales department.
+CREATE OR REPLACE ROW ACCESS POLICY sales_department_access
+ON ${ref("staff_directory")}
+GRANT TO ('${dataform.projectConfig.vars.salesGroup}')
+FILTER USING (department = 'Sales');

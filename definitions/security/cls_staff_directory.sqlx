@@ -1,0 +1,88 @@
+config {
+  type: "operations",
+  name: "cls_staff_directory",
+  hasOutput: false,
+  tags: ["security"],
+  description: "Column-Level Security for staff_directory using the modern SQL-based DATA_POLICY approach (pure Dataform SQLX -- no policy tags / Terraform needed). Dual-policy model per column: a DATA_MASKING_POLICY for general access + a RAW_DATA_ACCESS_POLICY for privileged access, both attached to the column; GRANT FINE_GRAINED_READ decides who gets which. bank_account uses only a raw-access policy, so non-grantees are blocked from the column entirely.",
+  dependencies: ["staff_directory"]
+}
+
+js {
+  const VARS = dataform.projectConfig.vars;
+  // Data policies are regional, addressed as <project>.region-<location>.<name>.
+  const policyId = (name) =>
+    `${dataform.projectConfig.defaultDatabase}.region-${dataform.projectConfig.defaultLocation}.${name}`;
+}
+
+-- ============================================================
+-- ssn -> SHA256 for Sales, raw for Admin
+-- ============================================================
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_ssn_masking_policy")}`
+OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="SHA256");
+
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_ssn_raw_policy")}`
+OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
+
+ALTER TABLE ${ref("staff_directory")}
+ALTER COLUMN ssn SET OPTIONS (
+  data_policies = [
+    "{'name':'${policyId("staff_ssn_masking_policy")}'}",
+    "{'name':'${policyId("staff_ssn_raw_policy")}'}"
+  ]
+);
+
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_ssn_masking_policy")}` TO "${VARS.salesPrincipal}";
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_ssn_raw_policy")}` TO "${VARS.adminPrincipal}";
+
+-- ============================================================
+-- email -> DEFAULT_MASKING_VALUE for Sales, raw for Admin
+-- ============================================================
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_email_masking_policy")}`
+OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="DEFAULT_MASKING_VALUE");
+
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_email_raw_policy")}`
+OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
+
+ALTER TABLE ${ref("staff_directory")}
+ALTER COLUMN email SET OPTIONS (
+  data_policies = [
+    "{'name':'${policyId("staff_email_masking_policy")}'}",
+    "{'name':'${policyId("staff_email_raw_policy")}'}"
+  ]
+);
+
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_email_masking_policy")}` TO "${VARS.salesPrincipal}";
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_email_raw_policy")}` TO "${VARS.adminPrincipal}";
+
+-- ============================================================
+-- salary -> ALWAYS_NULL for Sales, raw for Admin
+-- ============================================================
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_salary_masking_policy")}`
+OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="ALWAYS_NULL");
+
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_salary_raw_policy")}`
+OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
+
+ALTER TABLE ${ref("staff_directory")}
+ALTER COLUMN salary SET OPTIONS (
+  data_policies = [
+    "{'name':'${policyId("staff_salary_masking_policy")}'}",
+    "{'name':'${policyId("staff_salary_raw_policy")}'}"
+  ]
+);
+
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_salary_masking_policy")}` TO "${VARS.salesPrincipal}";
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_salary_raw_policy")}` TO "${VARS.adminPrincipal}";
+
+-- ============================================================
+-- bank_account -> raw-access only: blocked entirely for non-admins
+-- ============================================================
+CREATE OR REPLACE DATA_POLICY `${policyId("staff_bank_account_access_policy")}`
+OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
+
+ALTER TABLE ${ref("staff_directory")}
+ALTER COLUMN bank_account SET OPTIONS (
+  data_policies = ["{'name':'${policyId("staff_bank_account_access_policy")}'}"]
+);
+
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_bank_account_access_policy")}` TO "${VARS.adminPrincipal}";
