@@ -5,10 +5,10 @@ config {
   description: "Atomic flight fact: one row per flight, foreign keys to date/terminal/airline, measures at finest grain.",
   assertions: {
     uniqueKey: ["flight_id"],
-    nonNull: ["flight_id", "flight_date", "terminal_id"]
+    nonNull: ["flight_id", "date_key", "terminal_id"]
   },
   bigquery: {
-    partitionBy: "flight_date",
+    partitionBy: "date_key",
     clusterBy: ["terminal_id", "airline_code"]
   }
 }
