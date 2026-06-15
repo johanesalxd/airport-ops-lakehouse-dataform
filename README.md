@@ -16,9 +16,10 @@ raw GCS files
   -> operations:  native loads + external tables (BigLake/Parquet + plain external NDJSON->native JSON column) + serverless Spark stored procedures
   -> bronze:      typed, with ingestion metadata (_batch_id, _ingested_at, _record_hash)
   -> silver:      conformed, cleaned, deduplicated; Gemini multilingual feedback enrichment
-  -> gold:        ATOMIC star schema (dim_terminal, dim_airline, dim_date, fct_flight, fct_baggage, fct_feedback)
+  -> gold:        ATOMIC star schema (dim_terminal, dim_airline, dim_date, fct_flight, fct_baggage, fct_feedback) + gold_data_quality_summary
   -> semantic:    VIEWS that roll up at query time (the "semantic layer" teaching artifact)
-  -> assertions:  data-quality gates
+  -> assertions:  data-quality gates (quality stage)
+  -> security:    RLS + CLS governance showcase (self-contained staff_directory)
 ```
 
 ### The semantic-layer point
@@ -35,6 +36,10 @@ Dataform (here); the semantic layer only aggregates.
 
 The Composer DAG runs one stage per tag, in this order. Each medallion layer is
 its own stage, so the flow is visible in the Airflow graph.
+
+Some actions also carry **secondary tags** (`spark` on the procedure DDL, `ai` on
+the Gemini model + enrichment) for convenience when running subsets locally; these
+are not pipeline stages and are not invoked separately by the DAG.
 
 ## Project structure
 
@@ -83,3 +88,8 @@ npx @dataform/cli compile
 
 See `workflow_settings.yaml`. Reusable BigQuery connections are referenced by
 variable (`sparkConnection`, `geminiConnection`, `biglakeConnection`).
+
+The `security` stage additionally needs `governanceDataset` plus the four group
+vars (`adminGroup`, `salesGroup`, `adminPrincipal`, `salesPrincipal`) in
+`workflow_settings.yaml`, and the two referenced Google Groups must already exist
+(the demo repo's `bootstrap.sh` grants them the read roles).
