@@ -4,5 +4,8 @@
   "description": "Dataform project for the Airport Operations Lakehouse demo (bronze/silver/gold + semantic views).",
   "dependencies": {
     "@dataform/core": "3.0.59"
+  },
+  "devDependencies": {
+    "@dataform/cli": "3.0.59"
   }
 }
