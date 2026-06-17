@@ -1,0 +1,27 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.silverDataset,
+  tags: ["silver", "streaming"],
+  description: "Deduplicated near-real-time baggage scan events from Pub/Sub. One row per event_id."
+}
+
+SELECT
+  event_id,
+  bag_id,
+  flight_id,
+  scan_type,
+  scan_ts,
+  terminal_id,
+  belt_id,
+  status,
+  simulator_run_id,
+  subscription_name,
+  message_id,
+  publish_time,
+  attributes
+FROM ${ref("brz_baggage_events_stream")}
+WHERE publish_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)
+QUALIFY ROW_NUMBER() OVER (
+  PARTITION BY event_id
+  ORDER BY publish_time DESC, message_id DESC
+) = 1

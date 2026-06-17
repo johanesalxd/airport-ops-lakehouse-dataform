@@ -1,5 +1,5 @@
-// Declare the raw (control) tables that the ingestion operations populate, so
-// the bronze models can ref() them and Dataform draws the lineage edges.
+// Declare externally populated tables so downstream models can ref() them and
+// Dataform draws the lineage edges.
 
 const control = dataform.projectConfig.vars.controlDataset;
 
@@ -16,4 +16,10 @@ const control = dataform.projectConfig.vars.controlDataset;
     schema: control,
     name,
   });
+});
+
+declare({
+  database: dataform.projectConfig.defaultDatabase,
+  schema: dataform.projectConfig.vars.bronzeDataset,
+  name: "brz_baggage_events_stream",
 });
