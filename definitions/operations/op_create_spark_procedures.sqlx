@@ -7,7 +7,11 @@ config {
 -- Gzip CSV -> raw_passenger_flow
 CREATE OR REPLACE PROCEDURE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_load_passenger_flow`(src_uri STRING)
 WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.sparkConnection}`
-OPTIONS(engine="SPARK", runtime_version="2.2")
+OPTIONS(
+  engine="SPARK",
+  runtime_version="2.2",
+  properties=[("spark.dataproc.lineage.enabled", "true")]
+)
 LANGUAGE PYTHON AS R"""
 import os, json
 from pyspark.sql import SparkSession
@@ -30,7 +34,11 @@ df = (spark.read
 -- Nested JSON -> raw_security_wait (exploded to one row per checkpoint reading)
 CREATE OR REPLACE PROCEDURE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_load_security_wait`(src_uri STRING)
 WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.sparkConnection}`
-OPTIONS(engine="SPARK", runtime_version="2.2")
+OPTIONS(
+  engine="SPARK",
+  runtime_version="2.2",
+  properties=[("spark.dataproc.lineage.enabled", "true")]
+)
 LANGUAGE PYTHON AS R"""
 import os, json
 from pyspark.sql import SparkSession
