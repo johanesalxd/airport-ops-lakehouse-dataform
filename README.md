@@ -92,6 +92,8 @@ once, reference many times" idea the demo teaches:
 
 The *why* behind this structure lives in the companion demo repo:
 
+https://github.com/johanesalxd/airport-ops-lakehouse-demo
+
 - `docs/design-philosophy.md` — medallion + why gold is an atomic star schema,
   not the semantic layer.
 - `docs/architecture.md` — tech stack, infrastructure, how this repo connects to
