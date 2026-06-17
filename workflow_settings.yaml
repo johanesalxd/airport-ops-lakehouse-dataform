@@ -1,9 +1,9 @@
-defaultProject: johanesa-playground-326616
+defaultProject: your-project-id
 defaultLocation: us-central1
 defaultDataset: airport_silver
 defaultAssertionDataset: dataform_assertions
 vars:
-  rawBucket: airport-ops-demo-605626490127
+  rawBucket: airport-ops-demo-your-project-number
   sparkConnection: us-central1.spark-etl-conn
   geminiConnection: us-central1.gemini_conn
   biglakeConnection: us-central1.default-us-central1
@@ -17,7 +17,7 @@ vars:
   governanceDataset: airport_governance
   batchId: manual
   # RLS/CLS governance showcase (self-contained staff_directory table).
-  adminGroup: "group:bq-rls-cls-dataform-admin@johanesa.altostrat.com"
-  salesGroup: "group:bq-rls-cls-dataform-sales@johanesa.altostrat.com"
-  adminPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-admin@johanesa.altostrat.com"
-  salesPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-sales@johanesa.altostrat.com"
+  adminGroup: "group:bq-rls-cls-dataform-admin@your-domain.example"
+  salesGroup: "group:bq-rls-cls-dataform-sales@your-domain.example"
+  adminPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-admin@your-domain.example"
+  salesPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-sales@your-domain.example"

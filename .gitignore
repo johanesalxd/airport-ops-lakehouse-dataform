@@ -1,2 +1,8 @@
 node_modules/
 .df-credentials.json
+.env
+.env.*
+.DS_Store
+credentials.json
+*.key
+*.pem
