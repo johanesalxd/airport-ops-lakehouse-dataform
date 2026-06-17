@@ -44,8 +44,9 @@ The Composer DAG runs one stage per tag, in this order. Each medallion layer is
 its own stage, so the flow is visible in the Airflow graph.
 
 Some actions also carry **secondary tags** (`spark` on the procedure DDL, `ai` on
-the Gemini model + enrichment) for convenience when running subsets locally; these
-are not pipeline stages and are not invoked separately by the DAG.
+the Gemini model + enrichment, and `streaming` on the optional Pub/Sub dedupe
+view) for convenience when running subsets locally; these are not pipeline stages
+and are not invoked separately by the DAG.
 
 ## Project structure
 
@@ -53,7 +54,7 @@ are not pipeline stages and are not invoked separately by the DAG.
 workflow_settings.yaml          # public-safe defaults; Composer overrides at runtime
 definitions/
   operations/   native loads, external tables (BigLake Parquet + plain external JSON column), Spark proc DDL + CALLs, Gemini model
-  sources/      declarations.js (raw source declarations)
+  sources/      declarations.js (raw source declarations, including streaming bronze)
   bronze/       brz_*  typed + ingestion metadata
   silver/       slv_*  conformed/cleaned + slv_customer_feedback_enriched (Gemini)
   gold/         dim_* / fct_*  atomic star schema + gold_data_quality_summary
@@ -62,6 +63,17 @@ definitions/
   security/     RLS + CLS governance showcase (self-contained staff_directory)
 includes/       reusable JS (the DRY layer)
 ```
+
+## Optional streaming surface
+
+The companion demo repo creates `airport_bronze.brz_baggage_events_stream` for a
+Pub/Sub BigQuery subscription. Dataform declares that externally populated table
+and builds `airport_silver.slv_baggage_events_stream_deduped`, a view that keeps
+one row per `event_id` for the optional baggage streaming showcase.
+
+Because the view is also tagged `silver`, the full Composer DAG validates that
+the streaming surface exists even when the stream itself is not running. The demo
+repo's `bootstrap.sh` creates the bronze stream table before the DAG runs.
 
 ### The `includes/` DRY layer
 
@@ -89,12 +101,16 @@ The *why* behind this structure lives in the companion demo repo:
 
 ```bash
 npm install
-npx @dataform/cli compile
+npm run compile
 ```
 
 Local compile validates the SQLX graph against placeholder settings only. It does
 not create BigQuery resources. For a real run, configure and bootstrap the demo
 repo, then trigger the Composer DAG.
+
+The compile script runs the Dataform CLI through `npx` instead of installing it
+as a persistent dev dependency. This keeps the default dependency install small
+and avoids pinning local-only CLI transitive dependencies in this repo.
 
 ## Settings
 

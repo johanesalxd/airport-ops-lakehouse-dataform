@@ -2,10 +2,11 @@
   "name": "airport-ops-lakehouse-dataform",
   "version": "1.0.0",
   "description": "Dataform project for the Airport Operations Lakehouse demo (bronze/silver/gold + semantic views).",
+  "license": "Apache-2.0",
+  "scripts": {
+    "compile": "npx -y @dataform/cli@3.0.59 compile"
+  },
   "dependencies": {
     "@dataform/core": "3.0.59"
-  },
-  "devDependencies": {
-    "@dataform/cli": "3.0.59"
   }
 }
