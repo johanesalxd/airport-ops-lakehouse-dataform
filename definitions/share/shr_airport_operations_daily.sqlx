@@ -1,0 +1,18 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.shareDataset,
+  tags: ["share"],
+  description: "DATA-SHARING PRODUCT (Analytics Hub / NIO hub-and-spoke). Curated, share-safe daily operations KPIs exposed to external subscribers via a private Data Exchange listing. Reads the semantic roll-up so subscribers never touch base gold/silver tables. This view lives in the shareDataset and must be an authorized view on the semantic dataset (authorization is granted by scripts/setup_analytics_hub.py)."
+}
+
+SELECT
+  date_key,
+  total_flights,
+  delayed_flights,
+  delay_rate,
+  avg_delay_minutes,
+  total_scheduled_passengers,
+  total_bags,
+  late_bag_rate,
+  bags_missing_load_scan
+FROM ${ref("sem_airport_operations_daily")}

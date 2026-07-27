@@ -12,6 +12,7 @@ vars:
   silverDataset: airport_silver
   goldDataset: airport_gold
   semanticDataset: airport_semantic
+  shareDataset: airport_share
   aiDataset: airport_ai
   controlDataset: airport_ops_control
   governanceDataset: airport_governance

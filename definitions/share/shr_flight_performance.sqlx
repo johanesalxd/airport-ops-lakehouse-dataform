@@ -1,0 +1,19 @@
+config {
+  type: "view",
+  schema: dataform.projectConfig.vars.shareDataset,
+  tags: ["share"],
+  description: "DATA-SHARING PRODUCT (Analytics Hub / NIO hub-and-spoke). Curated flight-performance summary by date, terminal, and airline, aggregated from the atomic fct_flight so no raw operational rows are exposed to subscribers. Published as an Analytics Hub listing; must be an authorized view on the gold dataset (authorization granted by scripts/setup_analytics_hub.py)."
+}
+
+SELECT
+  date_key,
+  terminal_id,
+  airline_code,
+  COUNT(*) AS total_flights,
+  SUM(is_delayed) AS delayed_flights,
+  ROUND(AVG(is_delayed), 3) AS delay_rate,
+  ROUND(AVG(delay_minutes), 1) AS avg_delay_minutes,
+  SUM(scheduled_passengers) AS total_scheduled_passengers
+FROM ${ref("fct_flight")}
+GROUP BY date_key, terminal_id, airline_code
+ORDER BY date_key, terminal_id, airline_code

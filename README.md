@@ -26,6 +26,7 @@ raw GCS files
   -> semantic:    VIEWS that roll up at query time (the "semantic layer" teaching artifact)
   -> assertions:  data-quality gates (quality stage)
   -> security:    RLS + CLS governance showcase (self-contained staff_directory)
+  -> share:       curated shr_* views (authorized views) published via Analytics Hub (NIO hub-and-spoke data sharing)
 ```
 
 ### The semantic-layer point
@@ -38,7 +39,7 @@ Dataform (here); the semantic layer only aggregates.
 
 ## Tags (stages)
 
-`setup` → `ingestion` → `bronze` → `silver` → `gold` → `semantic` → `quality` → `security`
+`setup` → `ingestion` → `bronze` → `silver` → `gold` → `semantic` → `quality` → `security` → `share`
 
 The Composer DAG runs one stage per tag, in this order. Each medallion layer is
 its own stage, so the flow is visible in the Airflow graph.
@@ -61,6 +62,7 @@ definitions/
   semantic/     sem_*  query-time roll-up views
   assertions/   manual data-quality gates
   security/     RLS + CLS governance showcase (self-contained staff_directory)
+  share/        shr_*  curated authorized views published via Analytics Hub (NIO data sharing)
 includes/       reusable JS (the DRY layer)
 ```
 
