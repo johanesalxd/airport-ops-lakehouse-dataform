@@ -2,7 +2,7 @@ config {
   type: "view",
   schema: dataform.projectConfig.vars.shareDataset,
   tags: ["share"],
-  description: "DATA-SHARING PRODUCT (Analytics Hub / NIO hub-and-spoke). Curated, share-safe daily operations KPIs exposed to external subscribers via a private Data Exchange listing. Reads the semantic roll-up so subscribers never touch base gold/silver tables. This view lives in the shareDataset and must be an authorized view on the semantic dataset (authorization is granted by scripts/setup_analytics_hub.py)."
+  description: "DATA-SHARING PRODUCT (BigQuery Analytics Hub, hub-and-spoke). Curated, share-safe daily operations KPIs exposed to subscribers via a private Data Exchange listing. This view lives in the shareDataset, which is authorized to read the gold/semantic datasets, so subscribers query the product without access to the base tables. Reads the semantic daily roll-up. Publishing/authorization is handled in the companion demo repo."
 }
 
 SELECT

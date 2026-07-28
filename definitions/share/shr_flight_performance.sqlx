@@ -2,7 +2,7 @@ config {
   type: "view",
   schema: dataform.projectConfig.vars.shareDataset,
   tags: ["share"],
-  description: "DATA-SHARING PRODUCT (Analytics Hub / NIO hub-and-spoke). Curated flight-performance summary by date, terminal, and airline, aggregated from the atomic fct_flight so no raw operational rows are exposed to subscribers. Published as an Analytics Hub listing; must be an authorized view on the gold dataset (authorization granted by scripts/setup_analytics_hub.py)."
+  description: "DATA-SHARING PRODUCT (BigQuery Analytics Hub, hub-and-spoke). Curated flight-performance summary by date, terminal, and airline, aggregated from the atomic fct_flight so no raw operational rows are exposed. This view lives in the shareDataset, which is authorized to read the gold/semantic datasets, so subscribers query the product without access to the base tables. Publishing/authorization is handled in the companion demo repo."
 }
 
 SELECT
@@ -16,4 +16,3 @@ SELECT
   SUM(scheduled_passengers) AS total_scheduled_passengers
 FROM ${ref("fct_flight")}
 GROUP BY date_key, terminal_id, airline_code
-ORDER BY date_key, terminal_id, airline_code

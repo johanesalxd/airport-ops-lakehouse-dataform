@@ -26,7 +26,7 @@ raw GCS files
   -> semantic:    VIEWS that roll up at query time (the "semantic layer" teaching artifact)
   -> assertions:  data-quality gates (quality stage)
   -> security:    RLS + CLS governance showcase (self-contained staff_directory)
-  -> share:       curated shr_* views (authorized views) published via Analytics Hub (NIO hub-and-spoke data sharing)
+  -> share:       curated shr_* views (authorized views) published via Analytics Hub (hub-and-spoke data sharing)
 ```
 
 ### The semantic-layer point
@@ -62,7 +62,7 @@ definitions/
   semantic/     sem_*  query-time roll-up views
   assertions/   manual data-quality gates
   security/     RLS + CLS governance showcase (self-contained staff_directory)
-  share/        shr_*  curated authorized views published via Analytics Hub (NIO data sharing)
+  share/        shr_*  curated authorized views published via Analytics Hub (hub-and-spoke data sharing)
 includes/       reusable JS (the DRY layer)
 ```
 
