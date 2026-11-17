@@ -1,0 +1,43 @@
+config {
+  type: "operations",
+  tags: ["setup", "spark"],
+  description: "Creates a lightweight serverless BigQuery Spark stored procedure (synthetic airline codes only) for demonstrating billing-boundary separation between BigQuery Editions slots and Dataproc Serverless Spark compute."
+}
+
+CREATE OR REPLACE PROCEDURE `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.controlDataset}.sp_demo_spark_billing_probe`()
+WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.sparkConnection}`
+OPTIONS(
+  engine='SPARK',
+  runtime_version='2.2',
+  properties=[("spark.dataproc.lineage.enabled", "true")]
+)
+LANGUAGE PYTHON AS R"""
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+spark = SparkSession.builder.appName("demo_spark_billing_probe").getOrCreate()
+
+synthetic_flights = [
+    ("AO", "Alpha Ops Air", 120, 14),
+    ("SK", "Skyline Regional", 85, 9),
+    ("FL", "Flightline Express", 95, 11),
+    ("PA", "Pacific Airlink", 110, 7),
+]
+
+df = spark.createDataFrame(
+    synthetic_flights,
+    ["airline_code", "airline_name", "flights", "delayed_flights"],
+)
+
+summary = (
+    df.groupBy("airline_code", "airline_name")
+    .agg(
+        F.sum("flights").alias("total_flights"),
+        F.sum("delayed_flights").alias("total_delayed"),
+    )
+    .orderBy("airline_code")
+)
+
+rows = summary.collect()
+print(f"sp_demo_spark_billing_probe completed: airlines={len(rows)}")
+"""

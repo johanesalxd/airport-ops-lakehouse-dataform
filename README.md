@@ -19,8 +19,8 @@ settings.
 
 ```
 raw GCS files
-  -> operations:  native loads + external tables (BigLake/Parquet + plain external NDJSON->native JSON column) + serverless Spark stored procedures
-  -> bronze:      typed, with ingestion metadata (_batch_id, _ingested_at, _record_hash)
+  -> operations:  native loads + external tables (BigLake/Parquet + plain external NDJSON->native JSON column) + serverless Spark stored procedures (including `sp_demo_spark_billing_probe`)
+  -> bronze:      typed, with ingestion metadata (`_batch_id`, `_ingested_at`, `_record_hash`); `brz_baggage_events` materialized as BigLake Managed Apache Iceberg in GCS
   -> silver:      conformed, cleaned, deduplicated; Gemini multilingual feedback enrichment
   -> gold:        ATOMIC star schema (dim_terminal, dim_airline, dim_date, fct_flight, fct_baggage, fct_feedback) + gold_data_quality_summary
   -> semantic:    VIEWS that roll up at query time (the "semantic layer" teaching artifact)
@@ -106,11 +106,12 @@ https://github.com/johanesalxd/airport-ops-lakehouse-demo
 ```bash
 npm install
 npm run compile
+bash scripts/check_identifiers.sh
 ```
 
 Local compile validates the SQLX graph against placeholder settings only. It does
 not create BigQuery resources. For a real run, configure and bootstrap the demo
-repo, then trigger the Composer DAG.
+repo, then trigger the Composer DAG or Dataform runner.
 
 The compile script runs the Dataform CLI through `npx` instead of installing it
 as a persistent dev dependency. This keeps the default dependency install small
@@ -119,14 +120,19 @@ and avoids pinning local-only CLI transitive dependencies in this repo.
 ## Settings
 
 See `workflow_settings.yaml` for the variable names consumed by the SQLX graph.
-Reusable BigQuery connections are referenced by variable (`sparkConnection`,
-`geminiConnection`, `biglakeConnection`).
+Storage buckets use `rawBucket` (raw landing files) and `icebergBucket` (for the
+BigLake Managed Apache Iceberg table `brz_baggage_events`). Reusable BigQuery
+connections are referenced by variable (`sparkConnection`, `geminiConnection`,
+`biglakeConnection`), including `sp_demo_spark_billing_probe` in
+`definitions/operations/op_create_spark_billing_probe.sqlx` for Spark vs.
+BigQuery Editions billing-boundary verification.
 
-The `security` stage additionally needs `governanceDataset` plus the four group
-vars (`adminGroup`, `salesGroup`, `adminPrincipal`, `salesPrincipal`). In the
-full demo, these are supplied by Composer compilation overrides from the demo
-repo. The two referenced Google Groups must already exist; the demo repo's
-`bootstrap.sh` grants them the read roles.
+The `security` stage additionally needs `governanceDataset` plus either the
+comma-separated member overrides (`adminMembers`, `salesMembers`, accepting
+`user:`, `group:`, `serviceAccount:`, or bare emails normalized to `user:`) or,
+when those overrides are blank, the legacy group vars (`adminGroup`,
+`salesGroup`, `adminPrincipal`, `salesPrincipal`). In the full demo, these are
+supplied by Composer or Dataform compilation overrides from the demo repo.
 
 Google Cloud references:
 

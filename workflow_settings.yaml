@@ -4,6 +4,7 @@ defaultDataset: airport_silver
 defaultAssertionDataset: dataform_assertions
 vars:
   rawBucket: airport-ops-demo-your-project-number
+  icebergBucket: airport-ops-iceberg-your-project-number
   sparkConnection: us-central1.spark-etl-conn
   geminiConnection: us-central1.gemini_conn
   biglakeConnection: us-central1.default-us-central1
@@ -18,6 +19,10 @@ vars:
   governanceDataset: airport_governance
   batchId: manual
   # RLS/CLS governance showcase (self-contained staff_directory table).
+  # Optional comma-separated overrides accepting user:, group:, serviceAccount:,
+  # or bare emails (normalized to user:). When blank, legacy vars below apply.
+  adminMembers: ""
+  salesMembers: ""
   adminGroup: "group:bq-rls-cls-dataform-admin@your-domain.example"
   salesGroup: "group:bq-rls-cls-dataform-sales@your-domain.example"
   adminPrincipal: "principalSet://goog/group/bq-rls-cls-dataform-admin@your-domain.example"

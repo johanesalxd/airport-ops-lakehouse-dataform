@@ -9,70 +9,47 @@ config {
 
 js {
   const VARS = dataform.projectConfig.vars;
+  const { formatClsGrantList } = require("includes/principals");
   // Data policies are regional, addressed as <project>.region-<location>.<name>.
   const policyId = (name) =>
     `${dataform.projectConfig.defaultDatabase}.region-${dataform.projectConfig.defaultLocation}.${name}`;
+  const adminGrantTo = formatClsGrantList(VARS.adminMembers, VARS.adminPrincipal);
+  const salesGrantTo = formatClsGrantList(VARS.salesMembers, VARS.salesPrincipal);
+
+  const dualPolicyColumns = [
+    { column: "ssn", maskingExpression: "SHA256", label: "SHA256" },
+    { column: "email", maskingExpression: "DEFAULT_MASKING_VALUE", label: "DEFAULT_MASKING_VALUE" },
+    { column: "salary", maskingExpression: "ALWAYS_NULL", label: "ALWAYS_NULL" },
+  ];
+
+  const dualPolicySql = dualPolicyColumns
+    .map(({ column, maskingExpression, label }) => {
+      const maskPolicy = policyId(`staff_${column}_masking_policy`);
+      const rawPolicy = policyId(`staff_${column}_raw_policy`);
+      return `-- ============================================================
+-- ${column} -> ${label} for Sales, raw for Admin
+-- ============================================================
+CREATE OR REPLACE DATA_POLICY \`${maskPolicy}\`
+OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="${maskingExpression}");
+
+CREATE OR REPLACE DATA_POLICY \`${rawPolicy}\`
+OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
+
+ALTER TABLE ${ref("staff_directory")}
+ALTER COLUMN ${column} SET OPTIONS (
+  data_policies = [
+    "{'name':'${maskPolicy}'}",
+    "{'name':'${rawPolicy}'}"
+  ]
+);
+
+GRANT FINE_GRAINED_READ ON DATA_POLICY \`${maskPolicy}\` TO ${salesGrantTo};
+GRANT FINE_GRAINED_READ ON DATA_POLICY \`${rawPolicy}\` TO ${adminGrantTo};`;
+    })
+    .join("\n\n");
 }
 
--- ============================================================
--- ssn -> SHA256 for Sales, raw for Admin
--- ============================================================
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_ssn_masking_policy")}`
-OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="SHA256");
-
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_ssn_raw_policy")}`
-OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
-
-ALTER TABLE ${ref("staff_directory")}
-ALTER COLUMN ssn SET OPTIONS (
-  data_policies = [
-    "{'name':'${policyId("staff_ssn_masking_policy")}'}",
-    "{'name':'${policyId("staff_ssn_raw_policy")}'}"
-  ]
-);
-
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_ssn_masking_policy")}` TO "${VARS.salesPrincipal}";
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_ssn_raw_policy")}` TO "${VARS.adminPrincipal}";
-
--- ============================================================
--- email -> DEFAULT_MASKING_VALUE for Sales, raw for Admin
--- ============================================================
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_email_masking_policy")}`
-OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="DEFAULT_MASKING_VALUE");
-
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_email_raw_policy")}`
-OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
-
-ALTER TABLE ${ref("staff_directory")}
-ALTER COLUMN email SET OPTIONS (
-  data_policies = [
-    "{'name':'${policyId("staff_email_masking_policy")}'}",
-    "{'name':'${policyId("staff_email_raw_policy")}'}"
-  ]
-);
-
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_email_masking_policy")}` TO "${VARS.salesPrincipal}";
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_email_raw_policy")}` TO "${VARS.adminPrincipal}";
-
--- ============================================================
--- salary -> ALWAYS_NULL for Sales, raw for Admin
--- ============================================================
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_salary_masking_policy")}`
-OPTIONS (data_policy_type="DATA_MASKING_POLICY", masking_expression="ALWAYS_NULL");
-
-CREATE OR REPLACE DATA_POLICY `${policyId("staff_salary_raw_policy")}`
-OPTIONS (data_policy_type="RAW_DATA_ACCESS_POLICY");
-
-ALTER TABLE ${ref("staff_directory")}
-ALTER COLUMN salary SET OPTIONS (
-  data_policies = [
-    "{'name':'${policyId("staff_salary_masking_policy")}'}",
-    "{'name':'${policyId("staff_salary_raw_policy")}'}"
-  ]
-);
-
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_salary_masking_policy")}` TO "${VARS.salesPrincipal}";
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_salary_raw_policy")}` TO "${VARS.adminPrincipal}";
+${dualPolicySql}
 
 -- ============================================================
 -- bank_account -> raw-access only: blocked entirely for non-admins
@@ -85,4 +62,4 @@ ALTER COLUMN bank_account SET OPTIONS (
   data_policies = ["{'name':'${policyId("staff_bank_account_access_policy")}'}"]
 );
 
-GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_bank_account_access_policy")}` TO "${VARS.adminPrincipal}";
+GRANT FINE_GRAINED_READ ON DATA_POLICY `${policyId("staff_bank_account_access_policy")}` TO ${adminGrantTo};

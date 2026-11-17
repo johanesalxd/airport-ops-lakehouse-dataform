@@ -1,23 +1,63 @@
 config {
-  type: "table",
+  type: "operations",
   schema: dataform.projectConfig.vars.bronzeDataset,
+  name: "brz_baggage_events",
+  hasOutput: true,
   tags: ["bronze"],
   dependencies: ["op_create_biglake_baggage"],
-  description: "Bronze baggage scan events (sourced from the BigLake Parquet external table).",
-  assertions: { nonNull: ["bag_id"] }
+  description: "Bronze baggage scan events materialized as a BigLake Managed Apache Iceberg table in Cloud Storage (Parquet + Iceberg metadata, zero JSON columns)."
 }
 
-SELECT
-  CAST(bag_id AS STRING) AS bag_id,
-  CAST(flight_id AS STRING) AS flight_id,
-  CAST(scan_type AS STRING) AS scan_type,
-  SAFE_CAST(scan_ts AS TIMESTAMP) AS scan_ts,
-  CAST(terminal_id AS STRING) AS terminal_id,
-  CAST(belt_id AS STRING) AS belt_id,
-  CAST(status AS STRING) AS status,
-  '${dataform.projectConfig.vars.batchId}' AS _batch_id,
-  'baggage_events.parquet' AS _source_file,
-  'PARQUET' AS _source_format,
-  CURRENT_TIMESTAMP() AS _ingested_at,
-  TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
-FROM ${ref("raw_baggage_events")} AS t
+CREATE TABLE IF NOT EXISTS ${self()} (
+  bag_id STRING,
+  flight_id STRING,
+  scan_type STRING,
+  scan_ts TIMESTAMP,
+  terminal_id STRING,
+  belt_id STRING,
+  status STRING,
+  _batch_id STRING,
+  _source_file STRING,
+  _source_format STRING,
+  _ingested_at TIMESTAMP,
+  _record_hash STRING
+)
+CLUSTER BY terminal_id, scan_type
+WITH CONNECTION `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.vars.biglakeConnection}`
+OPTIONS (
+  file_format = 'PARQUET',
+  table_format = 'ICEBERG',
+  storage_uri = 'gs://${dataform.projectConfig.vars.icebergBucket}/airport_bronze/brz_baggage_events/'
+);
+
+BEGIN TRANSACTION;
+  DELETE FROM ${self()} WHERE TRUE;
+  INSERT INTO ${self()} (
+    bag_id,
+    flight_id,
+    scan_type,
+    scan_ts,
+    terminal_id,
+    belt_id,
+    status,
+    _batch_id,
+    _source_file,
+    _source_format,
+    _ingested_at,
+    _record_hash
+  )
+  SELECT
+    CAST(bag_id AS STRING) AS bag_id,
+    CAST(flight_id AS STRING) AS flight_id,
+    CAST(scan_type AS STRING) AS scan_type,
+    SAFE_CAST(scan_ts AS TIMESTAMP) AS scan_ts,
+    CAST(terminal_id AS STRING) AS terminal_id,
+    CAST(belt_id AS STRING) AS belt_id,
+    CAST(status AS STRING) AS status,
+    '${dataform.projectConfig.vars.batchId}' AS _batch_id,
+    'baggage_events.parquet' AS _source_file,
+    'PARQUET' AS _source_format,
+    CURRENT_TIMESTAMP() AS _ingested_at,
+    TO_HEX(MD5(TO_JSON_STRING(t))) AS _record_hash
+  FROM ${ref("raw_baggage_events")} AS t;
+COMMIT TRANSACTION;

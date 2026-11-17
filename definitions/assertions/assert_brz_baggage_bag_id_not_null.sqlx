@@ -1,0 +1,9 @@
+config {
+  type: "assertion",
+  tags: ["quality"],
+  description: "Every bronze baggage event must have a non-null bag_id (standalone assertion preserved after converting brz_baggage_events to a BigLake Managed Iceberg operation). Returns offending rows (zero = pass)."
+}
+
+SELECT *
+FROM ${ref("brz_baggage_events")}
+WHERE bag_id IS NULL

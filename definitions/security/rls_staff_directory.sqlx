@@ -7,14 +7,21 @@ config {
   dependencies: ["staff_directory"]
 }
 
+js {
+  const VARS = dataform.projectConfig.vars;
+  const { formatRlsGrantList } = require("includes/principals");
+  const adminGrantTo = formatRlsGrantList(VARS.adminMembers, VARS.adminGroup);
+  const salesGrantTo = formatRlsGrantList(VARS.salesMembers, VARS.salesGroup);
+}
+
 -- Admins see every row.
 CREATE OR REPLACE ROW ACCESS POLICY admin_full_access
 ON ${ref("staff_directory")}
-GRANT TO ('${dataform.projectConfig.vars.adminGroup}')
+GRANT TO (${adminGrantTo})
 FILTER USING (TRUE);
 
 -- Sales group sees only the Sales department.
 CREATE OR REPLACE ROW ACCESS POLICY sales_department_access
 ON ${ref("staff_directory")}
-GRANT TO ('${dataform.projectConfig.vars.salesGroup}')
+GRANT TO (${salesGrantTo})
 FILTER USING (department = 'Sales');
